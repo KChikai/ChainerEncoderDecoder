@@ -81,11 +81,6 @@ for epoch in range(100):
     chainer.serializers.save_npz(outfile, model)
 
 
-
-print(epoch, ":", )
-
-
-
 def main():
     pass
 

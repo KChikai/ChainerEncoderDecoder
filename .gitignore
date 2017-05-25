@@ -1,1 +1,8 @@
 ./idea
+
+__pycache__/*
+
+data/*
+!data/corpus
+data/corpus/*
+!data/corpus/.gitkeep

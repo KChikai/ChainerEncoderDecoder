@@ -4,7 +4,8 @@ import argparse
 import pickle
 import numpy as np
 import chainer
-import chainer.functions as F
+import unicodedata
+from nltk import word_tokenize
 from enc_dec_batch import EncoderDecoder
 
 
@@ -41,7 +42,7 @@ for epoch in range(100):
     filename = "data/batch-" + str(epoch) + ".model"
     chainer.serializers.load_npz(filename, model)
     for i in range(len(post_test_lines) - 1):
-        jln = post_test_lines[i].split()
+        jln = [unicodedata.normalize('NFKC', word.lower()) for word in post_test_lines[i].split()]
         jnlr = jln[::-1]
         print(epoch, ":")
         jnlr = xp.array([vocab[word] for word in jnlr], dtype=xp.int32)

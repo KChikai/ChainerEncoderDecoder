@@ -3,12 +3,15 @@
 import os
 os.environ["CHAINER_TYPE_CHECK"] = "0"
 
+
 import argparse
 import pickle
+import unicodedata
 import numpy as np
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from nltk import word_tokenize
 
 # parse command line args
 parser = argparse.ArgumentParser()
@@ -26,7 +29,7 @@ xp = np
 
 # for N step LSTM
 class LSTM(L.NStepLSTM):
-    def __init__(self, in_size, out_size, dropout=0.5, use_cudnn=True):
+    def __init__(self, in_size, out_size, dropout=0.1, use_cudnn=True):
         n_layers = 1
         super(LSTM, self).__init__(n_layers, in_size, out_size, dropout, use_cudnn)
         self.state_size = out_size
@@ -84,9 +87,9 @@ class LSTM(L.NStepLSTM):
 def sequence_embed(embed, xs):
     """
     convert text formatted ID to node data.
-    :param embed:
-    :param xs:
-    :return:
+    :param embed: F.EmbedID
+    :param xs: list of ndarray (np.int32). len(list) == the number of batch size
+    :return: string: output sentence
     """
     x_len = [len(x) for x in xs]
     x_section = xp.cumsum(x_len[:-1])
@@ -147,7 +150,7 @@ def main():
     id2wd = {}
     post_lines = open('data/post.txt').read().split('\n')
     for i in range(len(post_lines)):
-        lt = post_lines[i].split()
+        lt = [unicodedata.normalize('NFKC', word.lower()) for word in post_lines[i].split()]
         for w in lt:
             if w not in vocab:
                 w_id = len(vocab)
@@ -155,7 +158,7 @@ def main():
                 id2wd[w_id] = w
     cmnt_lines = open('data/cmnt.txt').read().split('\n')
     for i in range(len(cmnt_lines)):
-        lt = cmnt_lines[i].split()
+        lt = [unicodedata.normalize('NFKC', word.lower()) for word in cmnt_lines[i].split()]
         for w in lt:
             if w not in vocab:
                 w_id = len(vocab)
@@ -163,7 +166,7 @@ def main():
                 id2wd[w_id] = w
     post_test_lines = open('data/post-test.txt').read().split('\n')
     for i in range(len(post_test_lines)):
-        lt = post_test_lines[i].split()
+        lt = [unicodedata.normalize('NFKC', word.lower()) for word in post_test_lines[i].split()]
         for w in lt:
             if w not in vocab:
                 w_id = len(vocab)
@@ -196,11 +199,11 @@ def main():
     post_text_lines = [post_line.split()[::-1] for post_line in post_lines]
     post_lines = []
     for post in post_text_lines:
-        post_lines.append(xp.array([vocab[word] for word in post], xp.int32))
+        post_lines.append(xp.array([vocab[unicodedata.normalize('NFKC', word.lower())] for word in post], xp.int32))
     cmnt_text_lines = [cmnt_line.split() for cmnt_line in cmnt_lines]
     cmnt_lines = []
     for cmnt in cmnt_text_lines:
-        cmnt_lines.append(xp.array([vocab[word] for word in cmnt], xp.int32))
+        cmnt_lines.append(xp.array([vocab[unicodedata.normalize('NFKC', word.lower())] for word in cmnt], xp.int32))
     eos = xp.array([vocab['<eos>']], np.int32)
     cmnt_lines = [F.concat([line, eos], axis=0) for line in cmnt_lines]
 

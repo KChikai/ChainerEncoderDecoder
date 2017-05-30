@@ -29,17 +29,21 @@ with open('data/corpus/id2wd.pkl', 'br') as f:
     id2wd = pickle.load(f)
 post_w_num = len(vocab)
 
+
 # main part
-post_test_lines = open('data/post-test.txt').read().split('\n')
+post_test_lines = open('data/one_sent.txt').read().split('\n')
 
 hidden = 100
 for epoch in range(100):
     model = EncoderDecoder(w_size=post_w_num, hidden=hidden, gpu_flg=args.gpu)
+    if args.gpu >= 0:
+        model.to_gpu(device=args.gpu)
     filename = "data/batch-" + str(epoch) + ".model"
     chainer.serializers.load_npz(filename, model)
     for i in range(len(post_test_lines) - 1):
         jln = post_test_lines[i].split()
         jnlr = jln[::-1]
         print(epoch, ":")
+        jnlr = xp.array([vocab[word] for word in jnlr], dtype=xp.int32)
         result = model.interpreter(post_line=jnlr, batch=1, id2wd=id2wd)
         print(result)

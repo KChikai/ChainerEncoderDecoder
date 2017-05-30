@@ -115,16 +115,15 @@ class EncoderDecoder(chainer.Chain):
         cmnt_lines_out = [F.concat([line, eos], axis=0) for line in cmnt_lines]
 
         exs = sequence_embed(self.embedx, post_lines)
-        h = self.H(exs)
+        h = self.H(exs, train=True)
         eys = sequence_embed(self.embedy, cmnt_lines_in)
-        h = self.H(eys)
+        h = self.H(eys, train=True)
         loss = F.softmax_cross_entropy(self.W(F.concat(h, axis=0)), F.concat(cmnt_lines_out, axis=0))
         return loss
 
     def interpreter(self, post_line, batch, id2wd, max_length=15):
         self.H.reset_state()
-        exs = sequence_embed(self.embedx, post_line)
-        # zero = self.xp.zeros((self.H.n_layers, batch, self.hidden), 'f')
+        exs = sequence_embed(self.embedx, [post_line])
         h = self.H(exs, train=False)
         ys = self.xp.zeros(batch, xp.int32)
         result = ""
@@ -135,7 +134,9 @@ class EncoderDecoder(chainer.Chain):
             cys = chainer.functions.concat(ys, axis=0)
             wy = self.W(cys)
             ys = self.xp.argmax(wy.data, axis=1).astype(xp.int32)
-            result = result + id2wd[ys] + " "
+            result = result + id2wd[ys[0]] + " "
+            if id2wd[ys[0]] == '<eos>':
+                break
         return result
 
 

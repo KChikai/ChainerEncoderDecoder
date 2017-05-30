@@ -44,7 +44,7 @@ def mt(model, post_line):
 
 
 # main part
-post_test_lines = open('data/post-test.txt').read().split('\n')
+post_test_lines = open('data/one_sent.txt').read().split('\n')
 
 hidden = 100
 for epoch in range(100):
